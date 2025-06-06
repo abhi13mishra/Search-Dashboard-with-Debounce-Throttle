@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 30px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            width: 500px;
+            text-align: center;
+        }
+
+        #searchBox {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        #results {
+            list-style: none;
+            padding: 0;
+        }
+
+        #results li {
+            padding: 8px;
+            border-bottom: 1px solid #ccc;
+            text-align: left;
+        }
+
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
+        #backToTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Search Dashboard</h1>
+        <input type="text" id="searchBox" placeholder="Search names..." />
+
+        <div class="stats">
+            <p>Total Keystrokes: <span id="keystrokes">0</span></p>
+            <p>Debounced Searches: <span id="debouncedSearches">0</span></p>
+        </div>
+
+        <ul id="results"></ul>
+    </div>
+
+    <button id="backToTop">Go Top</button>
+
+    <script>
+        const names = [];
+        for (let i = 1; i <= 500; i++) {
+                names.push(`Name ${i}`);
+        }
+
+        const searchBox = document.getElementById("searchBox");
+        const results = document.getElementById("results");
+        const keystrokeEl = document.getElementById("keystrokes");
+        const debounceEl = document.getElementById("debouncedSearches");
+        const backToTop = document.getElementById("backToTop");
+
+        let keystrokes = 0;
+        let debouncedCount = 0;
+
+        function displayNames(list) {
+            results.innerHTML = "";
+            list.forEach(name => {
+                const li = document.createElement("li");
+                li.textContent = name;
+                results.appendChild(li);
+            });
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            displayNames(names);
+        });
+
+        function debounce(func, delay) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        function throttle(func, limit) {
+            let lastCall = 0;
+            return function (...args) {
+                const now = Date.now();
+                if (now - lastCall >= limit) {
+                    lastCall = now;
+                    func.apply(this, args);
+                }
+            };
+        }
+
+        function searchNames(query) {
+            debouncedCount++;
+            debounceEl.textContent = debouncedCount;
+
+            const filtered = names.filter(name =>
+                name.toLowerCase().includes(query.toLowerCase())
+            );
+
+            displayNames(filtered);
+        }
+
+        const debouncedSearch = debounce(searchNames, 1000);
+
+        searchBox.addEventListener("input", (e) => {
+            keystrokes++;
+            keystrokeEl.textContent = keystrokes;
+            debouncedSearch(e.target.value);
+        });
+
+        window.addEventListener("scroll", throttle(() => {
+            if (window.scrollY > 200) {
+                backToTop.style.display = "block";
+            } else {
+                backToTop.style.display = "none";
+            }
+        }, 500));
+
+        backToTop.addEventListener("click", () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    </script>
+</body>
+
+</html>
